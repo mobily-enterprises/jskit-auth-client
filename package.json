@@ -1,0 +1,44 @@
+{
+  "name": "jskit-auth-client",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./config/auth.js": "./src/config/auth.js",
+    "./stores/userState.js": "./src/stores/userState.js",
+    "./auth/interceptor.js": "./src/auth/interceptor.js",
+    "./auth/authProviders.js": "./src/auth/authProviders.js",
+    "./auth/providers/google/provider.js": "./src/auth/providers/google/provider.js",
+    "./auth/providers/supabase/provider.js": "./src/auth/providers/supabase/provider.js",
+    "./auth/providers/local/provider.js": "./src/auth/providers/local/provider.js",
+    "./linking/sessionSnapshot.js": "./src/linking/sessionSnapshot.js",
+    "./components/plain/LoginElement.vue": "./src/components/plain/LoginElement.vue",
+    "./components/plain/AccountLinking.vue": "./src/components/plain/AccountLinking.vue",
+    "./components/plain/AuthErrorBoundary.vue": "./src/components/plain/AuthErrorBoundary.vue",
+    "./components/plain/DrawerUserSection.vue": "./src/components/plain/DrawerUserSection.vue",
+    "./components/plain/UserMenu.vue": "./src/components/plain/UserMenu.vue",
+    "./components/plain/SignInPrompt.vue": "./src/components/plain/SignInPrompt.vue",
+    "./components/plain/ErrorBoundary.vue": "./src/components/plain/ErrorBoundary.vue",
+    "./components/vue/LoginElement.vue": "./src/components/vue/LoginElement.vue",
+    "./components/vue/AccountLinking.vue": "./src/components/vue/AccountLinking.vue",
+    "./components/vue/AuthErrorBoundary.vue": "./src/components/vue/AuthErrorBoundary.vue",
+    "./components/vue/DrawerUserSection.vue": "./src/components/vue/DrawerUserSection.vue",
+    "./components/vue/UserMenu.vue": "./src/components/vue/UserMenu.vue",
+    "./components/vue/SignInPrompt.vue": "./src/components/vue/SignInPrompt.vue",
+    "./components/vue/ErrorBoundary.vue": "./src/components/vue/ErrorBoundary.vue"
+  },
+  "main": "index.js",
+  "dependencies": {},
+  "peerDependencies": {
+    "vue": "^3.0.0",
+    "pinia": "^2.0.0",
+    "axios": "*",
+    "vue-router": "^4.0.0",
+    "vuetify": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vuetify": {
+      "optional": true
+    }
+  }
+}
