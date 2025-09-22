@@ -40,7 +40,7 @@
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStateStore } from '@remindjs/auth-client-vue/stores/userState.js'
+import { useUserStateStore } from 'jskit-auth-client/stores/userState.js'
 
 const router = useRouter()
 const userStore = useUserStateStore()

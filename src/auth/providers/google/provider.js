@@ -48,11 +48,9 @@ function clearSessionMeta() {
   localStorage.removeItem(SESSION_META_KEY)
 }
 
-// Define all provider methods
 const googleAuthProvider = {
   // Normalize session to standard format
   normalizeSession(rawSession) {
-    // Use the shared normalizer
     return normalizeGoogleSession(rawSession)
   },
 
@@ -77,6 +75,7 @@ const googleAuthProvider = {
       })
 
       const expiresIn = data.expires_in || 30 * 24 * 60 * 60
+
       let providerId = meta?.provider_id
       let user = meta?.user || null
 
@@ -91,6 +90,7 @@ const googleAuthProvider = {
 
           const profileData = profileResponse.data || {}
           const linkedGoogleId = profileData.linked_providers?.google
+
           if (profileData.provider === 'google' && profileData.provider_id) {
             providerId = profileData.provider_id
           } else if (linkedGoogleId) {
@@ -99,24 +99,13 @@ const googleAuthProvider = {
 
           user = profileData.user || user
         } catch (profileError) {
-          console.warn('[Google Provider] Failed to fetch profile during session restore:', profileError)
-        }
-
-        meta = {
-          provider_id: providerId,
-          user
+          console.warn('[Google Provider] Failed to fetch profile after refresh:', profileError)
         }
       }
 
-      if (!providerId || !user) {
-        clearSessionMeta()
-        return null
-      }
-
-      persistSessionMeta(meta)
-
-      return {
+      const normalizedSession = {
         access_token: data.access_token,
+        refresh_token: null,
         expires_in: expiresIn,
         expires_at: Math.floor(Date.now() / 1000) + expiresIn,
         token_type: 'Bearer',
@@ -124,6 +113,13 @@ const googleAuthProvider = {
         provider_id: providerId,
         user
       }
+
+      persistSessionMeta({
+        provider_id: providerId,
+        user: user || null
+      })
+
+      return normalizedSession
     } catch (error) {
       console.warn('[Google Provider] Stored session refresh failed:', error)
       clearSessionMeta()
@@ -233,7 +229,6 @@ const googleAuthProvider = {
     throw new Error('Google does not support anonymous account conversion')
   },
 
-  // ADD THIS METHOD:
   getMetadata() {
     return {
       name: 'google',

@@ -1,6 +1,6 @@
 {
   "name": "jskit-auth-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -28,10 +28,15 @@
     "./components/vue/ErrorBoundary.vue": "./src/components/vue/ErrorBoundary.vue"
   },
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "@supa-kit/auth-ui-vue": "^0.4.3",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/supabase-js": "^2.57.4",
+    "uuid": "^13.0.0"
+  },
   "peerDependencies": {
     "vue": "^3.0.0",
-    "pinia": "^2.0.0",
+    "pinia": "^3.0.0",
     "axios": "*",
     "vue-router": "^4.0.0",
     "vuetify": "^3.0.0"

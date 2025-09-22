@@ -18,7 +18,7 @@
 <script setup>
 import ErrorBoundary from './ErrorBoundary.vue'
 import { useRouter } from 'vue-router'
-import { useUserStateStore } from '@remindjs/auth-client-vue/stores/userState.js'
+import { useUserStateStore } from 'jskit-auth-client/stores/userState.js'
 
 const router = useRouter()
 const userStore = useUserStateStore()

@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { useUserStateStore } from '@remindjs/auth-client-vue/stores/userState.js'
+import { useUserStateStore } from 'jskit-auth-client/stores/userState.js'
 import UserMenu from './UserMenu.vue'
 import SignInPrompt from './SignInPrompt.vue'
 

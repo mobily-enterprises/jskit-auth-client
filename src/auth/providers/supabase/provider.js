@@ -39,7 +39,7 @@ const supabaseAuthProvider = {
 
       return originalRequest
     } catch (error) {
-      console.error('Supabase token refresh error:', error)
+      console.error('Supabase auth refresh error:', error)
       return null
     }
   },
@@ -123,7 +123,6 @@ const supabaseAuthProvider = {
     return true
   },
 
-  // ADD THIS METHOD:
   getMetadata() {
     return {
       name: 'supabase',

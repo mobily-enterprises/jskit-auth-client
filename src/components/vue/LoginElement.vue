@@ -38,9 +38,9 @@
 
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
-import { authConfig } from '@remindjs/auth-client-vue/config/auth.js'
-import { useUserStateStore } from '@remindjs/auth-client-vue/stores/userState.js'
-import { getAllProviderMetadata } from '@remindjs/auth-client-vue/auth/authProviders.js'
+import { authConfig } from 'jskit-auth-client/config/auth.js'
+import { useUserStateStore } from 'jskit-auth-client/stores/userState.js'
+import { getAllProviderMetadata } from 'jskit-auth-client/auth/authProviders.js'
 import ErrorBoundary from './ErrorBoundary.vue'
 
 const userStore = useUserStateStore()

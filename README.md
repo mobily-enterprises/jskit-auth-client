@@ -1,12 +1,14 @@
-# @remindjs/auth-client-vue
+# jskit-auth-client
 
 Reusable Vue 3 authentication client for RemindJS auth backends.
 
 ## Install
 
 ```bash
-npm install @remindjs/auth-client-vue
+npm install jskit-auth-client
 ```
+
+Requires Vue 3 with Pinia 2 or 3.
 
 ## Quick start
 
@@ -16,7 +18,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
 import App from './App.vue'
-import { setupAuthInterceptor, useUserStateStore } from '@remindjs/auth-client-vue'
+import { setupAuthInterceptor, useUserStateStore } from 'jskit-auth-client'
 
 const app = createApp(App)
 app.use(createPinia())
@@ -32,7 +34,7 @@ app.mount('#app')
 Use the exported helpers anywhere:
 
 ```js
-import { useUserStateStore, getAllProviderMetadata, authConfig } from '@remindjs/auth-client-vue'
+import { useUserStateStore, getAllProviderMetadata, authConfig } from 'jskit-auth-client'
 ```
 
 - `useUserStateStore()` – Pinia store with session/profile helpers
@@ -54,7 +56,7 @@ Two flavours are provided:
     PlainAccountLinking,
     PlainAuthErrorBoundary,
     PlainDrawerUserSection
-  } from '@remindjs/auth-client-vue'
+  } from 'jskit-auth-client'
   ```
 
 - **Vuetify** (ready-made Material design):
@@ -65,12 +67,12 @@ Two flavours are provided:
     VuetifyAccountLinking,
     VuetifyAuthErrorBoundary,
     VuetifyDrawerUserSection
-  } from '@remindjs/auth-client-vue'
+  } from 'jskit-auth-client'
 
   // Stock* aliases point to Plain* by default
-  import { StockLoginElement } from '@remindjs/auth-client-vue'
+  import { StockLoginElement } from 'jskit-auth-client'
   ```
 
   These components assume Vuetify 3 (and its icon plugin) is installed.
 
-`Stock*` aliases in the package default to the plain versions for quick upgrades. You can also import individual files (e.g. `@remindjs/auth-client-vue/components/plain/LoginElement.vue`) to copy/paste and customise.
+`Stock*` aliases in the package default to the plain versions for quick upgrades. You can also import individual files (e.g. `jskit-auth-client/components/plain/LoginElement.vue`) to copy/paste and customise.
