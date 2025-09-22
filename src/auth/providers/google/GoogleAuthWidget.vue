@@ -200,9 +200,6 @@ const userStore = useUserStateStore();
 
 // GOOGLE-SPECIFIC: Configuration
 const clientId = getAuthClientConfig().google?.clientId;
-if (!clientId) {
-  throw new Error('GoogleAuthWidget: google.clientId is not configured. Call configureAuthClient() before importing this widget.');
-}
 const buttonContainer = ref(null);
 
 // State management

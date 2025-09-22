@@ -40,7 +40,9 @@ function normalizeBoolean(value, defaultValue = false) {
 function normalizeString(value) {
   if (value === undefined || value === null) return undefined
   const str = String(value).trim()
-  return str.length ? str : undefined
+  if (!str.length) return undefined
+  if (str.toLowerCase() === 'undefined' || str.toLowerCase() === 'null') return undefined
+  return str
 }
 
 function normalizeList(value) {
