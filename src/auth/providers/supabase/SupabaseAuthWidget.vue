@@ -1,7 +1,6 @@
 <template>
-  <!-- Supabase Auth UI Component - Email/Password and configured OAuth providers -->
   <Auth
-    :supabaseClient="supabase"
+    :supabaseClient="supabaseClient"
     :appearance="authAppearance"
     :providers="oauthProviders"
     :redirectTo="redirectUrl"
@@ -13,47 +12,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStateStore } from '../../../stores/userState.js'
 import { Auth } from '@supa-kit/auth-ui-vue'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { supabase } from './client'
+import { getSupabaseClient } from './client.js'
 import { authConfig } from '../../../config/auth.js'
+import { getAuthClientConfig } from '../../../runtimeConfig.js'
 import supabaseAuthProvider from './provider.js'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStateStore()
 
-// Parse OAuth providers from environment variable
-const oauthProviders = computed(() => {
-  const providersEnv = import.meta.env.VITE_SUPABASE_OAUTH_PROVIDERS || ''
+const supabaseClient = computed(() => getSupabaseClient())
 
-  if (!providersEnv) {
-    return [] // No OAuth providers, only email/password
-  }
+const supabaseSettings = computed(() => getAuthClientConfig().supabase || {})
 
-  // Split by comma, trim whitespace, and filter empty strings
-  return providersEnv
-    .split(',')
-    .map(p => p.trim())
-    .filter(p => p)
-})
+const oauthProviders = computed(() => supabaseSettings.value.oauthProviders || [])
+const oauthOnly = computed(() => !!supabaseSettings.value.oauthOnly)
+const magicLinkEnabled = computed(() => !!supabaseSettings.value.magicLink)
 
-// Check if we should only show OAuth providers (hide email/password)
-const oauthOnly = computed(() => {
-  return import.meta.env.VITE_SUPABASE_OAUTH_ONLY === 'true' ||
-         import.meta.env.VITE_SUPABASE_OAUTH_ONLY === true
-})
-
-// Check if magic link authentication should be enabled
-const magicLinkEnabled = computed(() => {
-  return import.meta.env.VITE_SUPABASE_MAGIC_LINK === 'true' ||
-         import.meta.env.VITE_SUPABASE_MAGIC_LINK === true
-})
-
-// Props
 const props = defineProps({
   view: {
     type: String,
@@ -65,13 +45,12 @@ const props = defineProps({
   }
 })
 
-// Emits
 const emit = defineEmits(['message', 'success', 'error', 'linked'])
 
-// Computed
-const redirectUrl = `${window.location.origin}/auth/callback`
+const redirectUrl = computed(() => {
+  return supabaseSettings.value.redirectUrl || `${window.location.origin}/auth/callback`
+})
 
-// Theme configuration for Supabase Auth UI
 const authAppearance = {
   theme: ThemeSupa,
   style: {
@@ -90,17 +69,14 @@ const authAppearance = {
   }
 }
 
-// Listen for auth state changes
 onMounted(() => {
-  // Check for existing session
-  supabase.auth.getSession().then(({ data: { session } }) => {
+  supabaseClient.value.auth.getSession().then(({ data: { session } }) => {
     if (session && !userStore.isAnonymous) {
       handleSuccessfulAuth(session)
     }
   })
 
-  // Listen for auth changes
-  const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+  const { data: authListener } = supabaseClient.value.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
       await handleSuccessfulAuth(session)
     } else if (event === 'SIGNED_OUT' && props.mode !== 'link') {
@@ -108,7 +84,6 @@ onMounted(() => {
     }
   })
 
-  // Cleanup
   return () => {
     authListener?.subscription.unsubscribe()
   }
@@ -132,7 +107,7 @@ async function handleSuccessfulAuth(session) {
         emit('error', { message: error.message || 'Failed to link Supabase account' })
       } finally {
         try {
-          await supabase.auth.signOut()
+        await supabaseClient.value.auth.signOut()
         } catch (signOutError) {
           console.warn('[SupabaseAuthWidget] Failed to clear temporary session:', signOutError)
         }
@@ -155,3 +130,6 @@ async function handleSuccessfulAuth(session) {
   }
 }
 </script>
+
+<style scoped>
+</style>

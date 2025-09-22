@@ -1,18 +1,12 @@
-// Centralized authentication configuration with comprehensive error handling settings
-export const authConfig = {
-  // Provider configuration
-  // NOTE: This list includes authentication system names, not OAuth provider names
-  // 'local' = frontend-only anonymous sessions
-  // 'supabase' = Supabase auth system (email/password + OAuth)
-  // 'google' = Direct Google OAuth (not through Supabase)
-  providers: ['local', 'supabase', 'google'],
-  defaultProvider: import.meta.env.VITE_DEFAULT_AUTH_PROVIDER || 'supabase',
-  anonymousProvider: 'local', // Always use local for anonymous
+const DEFAULT_AUTH_CONFIG = {
+  providers: ['local'],
+  defaultProvider: 'local',
+  anonymousProvider: 'local',
 
   // Anonymous session settings
-  allowAnonymous: import.meta.env.VITE_ALLOW_ANONYMOUS === 'true' || import.meta.env.VITE_ALLOW_ANONYMOUS === true,
-  autoStartAnonymous: import.meta.env.VITE_AUTO_START_ANONYMOUS === 'true' || import.meta.env.VITE_AUTO_START_ANONYMOUS === true,
-  anonymousSessionDuration: 24 * 60 * 60 * 1000, // 24 hours
+  allowAnonymous: false,
+  autoStartAnonymous: false,
+  anonymousSessionDuration: 24 * 60 * 60 * 1000,
 
   // Password settings
   showPasswordReset: true,
@@ -20,102 +14,67 @@ export const authConfig = {
   requireStrongPassword: true,
 
   // Session management
-  sessionCheckInterval: 5 * 60 * 1000, // Check every 5 minutes
-  sessionWarningTime: 5 * 60 * 1000, // Warn 5 minutes before expiry
+  sessionCheckInterval: 5 * 60 * 1000,
+  sessionWarningTime: 5 * 60 * 1000,
   autoRefreshToken: true,
   persistSession: true,
 
   // Timeout configuration (all in milliseconds)
   timeouts: {
-    // Network timeouts
-    authRequest: 15000,           // 15 seconds for auth requests
-    tokenRefresh: 10000,          // 10 seconds for token refresh
-    profileFetch: 8000,           // 8 seconds for profile fetch
-    sdkLoad: 5000,               // 5 seconds for SDK loading
-
-    // UI timeouts
-    redirectDelay: 500,          // Delay before redirect after auth
-    errorDisplayDuration: 5000,  // How long to show error messages
-    loadingTimeout: 30000,       // Maximum loading state duration
-
-    // Retry timeouts
-    retryDelay: 1000,           // Initial retry delay
-    maxRetryDelay: 30000,       // Maximum retry delay
-    backoffMultiplier: 2,       // Exponential backoff multiplier
+    authRequest: 15000,
+    tokenRefresh: 10000,
+    profileFetch: 8000,
+    sdkLoad: 5000,
+    redirectDelay: 500,
+    errorDisplayDuration: 5000,
+    loadingTimeout: 30000,
+    retryDelay: 1000,
+    maxRetryDelay: 30000,
+    backoffMultiplier: 2,
   },
 
-  // Retry configuration
   retry: {
-    maxAttempts: 3,              // Maximum retry attempts
-    retryableErrors: [           // Error codes that trigger retry
-      'NETWORK_ERROR',
-      'TIMEOUT',
-      'SERVER_ERROR',
-      'RATE_LIMIT'
-    ],
-    retryableStatusCodes: [      // HTTP status codes that trigger retry
-      408, // Request Timeout
-      429, // Too Many Requests
-      500, // Internal Server Error
-      502, // Bad Gateway
-      503, // Service Unavailable
-      504  // Gateway Timeout
-    ],
-    networkErrorRetries: 2,      // Specific retries for network errors
-    exponentialBackoff: true,    // Use exponential backoff
-    jitterRange: 200,            // Random jitter 0-200ms
+    maxAttempts: 3,
+    retryableErrors: ['NETWORK_ERROR', 'TIMEOUT', 'SERVER_ERROR', 'RATE_LIMIT'],
+    retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+    networkErrorRetries: 2,
+    exponentialBackoff: true,
+    jitterRange: 200,
   },
 
-  // Error handling configuration
   errorHandling: {
-    // Logging settings
-    enableDetailedLogging: import.meta.env.DEV, // Detailed logs in dev only
+    enableDetailedLogging: false,
     logToConsole: true,
-    logSensitiveData: false,     // Never log tokens, passwords, etc.
-
-    // Error tracking service (optional)
+    logSensitiveData: false,
     errorTracking: {
-      enabled: import.meta.env.VITE_ERROR_TRACKING_ENABLED === 'true',
-      endpoint: import.meta.env.VITE_ERROR_TRACKING_ENDPOINT,
-      apiKey: import.meta.env.VITE_ERROR_TRACKING_API_KEY,
-      sampleRate: 1.0,           // Percentage of errors to track (0.0 to 1.0)
+      enabled: false,
+      endpoint: null,
+      apiKey: null,
+      sampleRate: 1.0,
       includeStackTrace: true,
       includeUserContext: true,
-      excludePatterns: [         // Don't track these error patterns
+      excludePatterns: [
         /ResizeObserver loop limit exceeded/,
         /Non-Error promise rejection captured/
       ]
     },
-
-    // User-facing error messages
     messages: {
-      // Network errors
       NETWORK_ERROR: 'Unable to connect. Please check your internet connection.',
       TIMEOUT: 'The request took too long. Please try again.',
       RATE_LIMIT: 'Too many requests. Please wait a moment before trying again.',
-
-      // Authentication errors
       INVALID_CREDENTIALS: 'Invalid email or password. Please try again.',
       EMAIL_NOT_CONFIRMED: 'Please confirm your email address before signing in.',
       EMAIL_EXISTS: 'This email is already registered. Please sign in or use a different email.',
       WEAK_PASSWORD: 'Password is too weak. Please use a stronger password.',
-
-      // Session errors
       SESSION_EXPIRED: 'Your session has expired. Please sign in again.',
       TOKEN_REFRESH_FAILED: 'Unable to refresh your session. Please sign in again.',
       AUTH_VALIDATION_FAILED: 'Authentication validation failed. Please sign in again.',
-
-      // Provider-specific errors
       GOOGLE_SDK_LOAD_FAILED: 'Unable to load Google Sign-In. Please try again or use another method.',
       GOOGLE_SDK_INIT_FAILED: 'Google Sign-In initialization failed. Please refresh the page.',
       SUPABASE_CONNECTION_FAILED: 'Unable to connect to authentication service.',
-
-      // Generic errors
       UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.',
       SERVER_ERROR: 'Server error. Please try again later.',
       CLIENT_ERROR: 'Invalid request. Please check your input and try again.',
-
-      // Success messages
       LOGIN_SUCCESS: 'Welcome back!',
       SIGNUP_SUCCESS: 'Account created successfully!',
       LOGOUT_SUCCESS: 'You have been signed out.',
@@ -123,124 +82,148 @@ export const authConfig = {
       EMAIL_CONFIRMED: 'Email confirmed successfully!',
       PROFILE_UPDATED: 'Profile updated successfully.',
     },
-
-    // Error recovery strategies
     recovery: {
-      // Auto-recovery for specific errors
       autoRecover: {
-        NETWORK_ERROR: true,      // Auto-retry on network errors
-        TIMEOUT: true,            // Auto-retry on timeout
-        TOKEN_EXPIRED: true,      // Auto-refresh token
-        RATE_LIMIT: true,        // Auto-retry after delay
+        NETWORK_ERROR: true,
+        TIMEOUT: true,
+        TOKEN_EXPIRED: true,
+        RATE_LIMIT: true,
       },
-
-      // Fallback strategies
       fallbacks: {
-        GOOGLE_SDK_FAILED: 'oauth_redirect',  // Use OAuth redirect if SDK fails
-        TOKEN_REFRESH_FAILED: 'relogin',      // Force re-login if refresh fails
-        PROFILE_FETCH_FAILED: 'continue',     // Continue without profile
+        GOOGLE_SDK_FAILED: 'oauth_redirect',
+        TOKEN_REFRESH_FAILED: 'relogin',
+        PROFILE_FETCH_FAILED: 'continue',
       },
-
-      // Circuit breaker configuration
       circuitBreaker: {
         enabled: true,
-        threshold: 5,             // Failures before opening circuit
-        timeout: 60000,          // Time before trying again (1 minute)
-        halfOpenRequests: 3,     // Requests to test in half-open state
+        threshold: 5,
+        timeout: 60000,
+        halfOpenRequests: 3,
       }
     }
   },
 
-  // Rate limiting configuration
   rateLimiting: {
     enabled: true,
     requests: {
-      login: { max: 5, window: 300000 },        // 5 attempts per 5 minutes
-      signup: { max: 3, window: 600000 },       // 3 attempts per 10 minutes
-      passwordReset: { max: 3, window: 3600000 }, // 3 attempts per hour
-      tokenRefresh: { max: 10, window: 60000 },  // 10 attempts per minute
+      login: { max: 5, window: 300000 },
+      signup: { max: 3, window: 600000 },
+      passwordReset: { max: 3, window: 3600000 },
+      tokenRefresh: { max: 10, window: 60000 },
     },
-    storage: 'localStorage',     // Where to store rate limit counters
+    storage: 'localStorage',
   },
 
-  // Security settings
   security: {
-    // CSRF protection
     csrfEnabled: true,
     csrfTokenHeader: 'X-CSRF-Token',
-
-    // Request signing
     signRequests: false,
     signatureHeader: 'X-Request-Signature',
-
-    // Token storage
-    tokenStorage: 'localStorage', // 'localStorage', 'sessionStorage', 'memory', 'cookie'
-    secureCookies: true,         // Use secure flag for cookies
-    sameSiteCookies: 'strict',   // SameSite cookie attribute
-
-    // Session validation
-    validateSessionOnFocus: true, // Check session when window gains focus
-    validateSessionInterval: 60000, // Check session every minute
+    tokenStorage: 'localStorage',
+    secureCookies: true,
+    sameSiteCookies: 'strict',
+    validateSessionOnFocus: true,
+    validateSessionInterval: 60000,
   },
 
-  // UI/UX settings
   ui: {
     showLoadingStates: true,
-    showErrorDetails: import.meta.env.DEV, // Show detailed errors in dev only
+    showErrorDetails: false,
     autoFocusFirstField: true,
-    persistFormData: true,       // Remember form data on error
-    locale: 'en',                // Default locale for messages
-
-    // Animation settings
+    persistFormData: true,
+    locale: 'en',
     animations: {
       enabled: true,
-      duration: 300,              // Default animation duration
+      duration: 300,
       easing: 'ease-in-out',
     }
   },
 
-  // Development/debugging settings
   debug: {
-    enabled: import.meta.env.DEV,
+    enabled: false,
     logRequests: true,
     logResponses: true,
     logErrors: true,
-    mockLatency: 0,              // Add artificial latency for testing
-    failureRate: 0,              // Simulate random failures (0.0 to 1.0)
+    mockLatency: 0,
+    failureRate: 0,
   }
 }
 
-// Helper function to get timeout value with fallback
+export const AUTH_CONFIG_DEFAULTS = JSON.parse(JSON.stringify(DEFAULT_AUTH_CONFIG))
+
+export const authConfig = JSON.parse(JSON.stringify(DEFAULT_AUTH_CONFIG))
+
+function mergeInto(target, source) {
+  if (!source || typeof source !== 'object') {
+    return
+  }
+
+  for (const [key, value] of Object.entries(source)) {
+    if (value === undefined) continue
+
+    if (Array.isArray(value)) {
+      target[key] = [...value]
+    } else if (value && typeof value === 'object') {
+      if (typeof target[key] !== 'object' || target[key] === null || Array.isArray(target[key])) {
+        target[key] = {}
+      }
+      mergeInto(target[key], value)
+    } else {
+      target[key] = value
+    }
+  }
+}
+
+export function resetAuthConfig() {
+  for (const key of Object.keys(authConfig)) {
+    delete authConfig[key]
+  }
+  mergeInto(authConfig, AUTH_CONFIG_DEFAULTS)
+}
+
+export function applyAuthConfig(overrides = {}) {
+  if (!overrides || typeof overrides !== 'object') return
+
+  if (overrides.providers) {
+    authConfig.providers = [...overrides.providers]
+  }
+
+  mergeInto(authConfig, overrides)
+}
+
 export function getTimeout(key, fallback = 10000) {
-  return authConfig.timeouts[key] || fallback
+  return authConfig.timeouts?.[key] ?? fallback
 }
 
-// Helper function to get error message
 export function getErrorMessage(code, fallback = null) {
-  return authConfig.errorHandling.messages[code] ||
+  return authConfig.errorHandling?.messages?.[code] ||
          fallback ||
-         authConfig.errorHandling.messages.UNKNOWN_ERROR
+         authConfig.errorHandling?.messages?.UNKNOWN_ERROR
 }
 
-// Helper function to determine if error should be retried
 export function shouldRetryError(errorCode, statusCode) {
-  if (authConfig.retry.retryableErrors.includes(errorCode)) {
+  const retryConfig = authConfig.retry || {}
+
+  if (retryConfig.retryableErrors?.includes(errorCode)) {
     return true
   }
-  if (statusCode && authConfig.retry.retryableStatusCodes.includes(statusCode)) {
+  if (statusCode && retryConfig.retryableStatusCodes?.includes(statusCode)) {
     return true
   }
   return false
 }
 
-// Helper function for rate limiting check
 export function checkRateLimit(action) {
-  if (!authConfig.rateLimiting.enabled) return true
+  const rateConfig = authConfig.rateLimiting
+  if (!rateConfig?.enabled) return true
 
-  const limits = authConfig.rateLimiting.requests[action]
+  const limits = rateConfig.requests?.[action]
   if (!limits) return true
 
-  const storage = window[authConfig.rateLimiting.storage]
+  const storageName = rateConfig.storage || 'localStorage'
+  const storage = typeof window !== 'undefined' ? window[storageName] : null
+  if (!storage) return true
+
   const key = `rate_limit_${action}`
   const now = Date.now()
 
@@ -257,27 +240,25 @@ export function checkRateLimit(action) {
     return true
   } catch (error) {
     console.error('Rate limit check failed:', error)
-    return true // Allow on error
+    return true
   }
 }
 
-// Helper function for circuit breaker
 class CircuitBreaker {
   constructor(name, config = authConfig.errorHandling.recovery.circuitBreaker) {
     this.name = name
     this.config = config
-    this.state = 'closed' // closed, open, half-open
+    this.state = 'closed'
     this.failures = 0
     this.lastFailureTime = null
     this.successCount = 0
   }
 
   async execute(fn) {
-    if (!this.config.enabled) {
+    if (!this.config?.enabled) {
       return fn()
     }
 
-    // Check if circuit should be half-open
     if (this.state === 'open') {
       const elapsed = Date.now() - this.lastFailureTime
       if (elapsed > this.config.timeout) {
@@ -291,7 +272,6 @@ class CircuitBreaker {
     try {
       const result = await fn()
 
-      // Success - update state
       if (this.state === 'half-open') {
         this.successCount++
         if (this.successCount >= this.config.halfOpenRequests) {
@@ -304,7 +284,6 @@ class CircuitBreaker {
 
       return result
     } catch (error) {
-      // Failure - update state
       this.failures++
       this.lastFailureTime = Date.now()
 
@@ -324,12 +303,10 @@ class CircuitBreaker {
   }
 }
 
-// Export circuit breaker instances for different services
 export const circuitBreakers = {
   auth: new CircuitBreaker('auth'),
   tokenRefresh: new CircuitBreaker('tokenRefresh'),
   profile: new CircuitBreaker('profile'),
 }
 
-// Export the config for modification if needed
 export default authConfig

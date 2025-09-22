@@ -25,7 +25,8 @@
     "./components/vue/DrawerUserSection.vue": "./src/components/vue/DrawerUserSection.vue",
     "./components/vue/UserMenu.vue": "./src/components/vue/UserMenu.vue",
     "./components/vue/SignInPrompt.vue": "./src/components/vue/SignInPrompt.vue",
-    "./components/vue/ErrorBoundary.vue": "./src/components/vue/ErrorBoundary.vue"
+    "./components/vue/ErrorBoundary.vue": "./src/components/vue/ErrorBoundary.vue",
+    "./runtimeConfig.js": "./src/runtimeConfig.js"
   },
   "main": "index.js",
   "dependencies": {

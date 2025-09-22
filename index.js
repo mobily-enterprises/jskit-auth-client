@@ -1,3 +1,4 @@
+export { configureAuthClient, getAuthClientConfig, resetAuthClientConfig } from './src/runtimeConfig.js'
 export { authConfig, authConfig as defaultAuthConfig, getTimeout, getErrorMessage, checkRateLimit, circuitBreakers } from './src/config/auth.js'
 export { useUserStateStore } from './src/stores/userState.js'
 export { setupAuthInterceptor, setAuthRouter } from './src/auth/interceptor.js'

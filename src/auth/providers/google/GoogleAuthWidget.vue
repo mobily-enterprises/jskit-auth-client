@@ -96,7 +96,7 @@
  * ============================================================================
  * ENVIRONMENT REQUIREMENTS:
  * ============================================================================
- * - VITE_GOOGLE_CLIENT_ID: Google OAuth client ID (required)
+ * - google.clientId provided via configureAuthClient (required)
  *
  * ============================================================================
  * BACKEND ENDPOINTS USED:
@@ -158,6 +158,7 @@
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStateStore } from '../../../stores/userState.js';
+import { getAuthClientConfig } from '../../../runtimeConfig.js';
 import axios from 'axios';
 import { authConfig } from '../../../config/auth.js';
 import googleAuthProvider from './provider.js';
@@ -198,7 +199,10 @@ const route = useRoute();
 const userStore = useUserStateStore();
 
 // GOOGLE-SPECIFIC: Configuration
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const clientId = getAuthClientConfig().google?.clientId;
+if (!clientId) {
+  throw new Error('GoogleAuthWidget: google.clientId is not configured. Call configureAuthClient() before importing this widget.');
+}
 const buttonContainer = ref(null);
 
 // State management

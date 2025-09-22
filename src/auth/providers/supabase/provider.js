@@ -1,30 +1,43 @@
 import axios from 'axios'
-import { supabase } from './client.js'
+import { getSupabaseClient } from './client.js'
 import { registerAuthProvider } from '../../authProviders.js'
 import { normalizeSupabaseSession } from '../../normalizers/supabase.js'
+import { getAuthClientConfig } from '../../../runtimeConfig.js'
 
-// Define all provider methods
+function ensureSupabaseClient() {
+  return getSupabaseClient()
+}
+
+function getSupabaseSettings() {
+  return getAuthClientConfig().supabase || {}
+}
+
+function isSupabaseEnabled() {
+  const config = getAuthClientConfig()
+  const providers = config.providers || []
+  const supabase = config.supabase
+  return providers.includes('supabase') && !!supabase?.url && !!supabase?.anonKey
+}
+
 const supabaseAuthProvider = {
-  // Normalize session to standard format
   normalizeSession(rawSession) {
-    // Use the shared normalizer
     return normalizeSupabaseSession(rawSession)
   },
 
-  // Get stored session
   async getStoredSession() {
+    const supabase = ensureSupabaseClient()
     const { data: { session } } = await supabase.auth.getSession()
     return session
   },
 
-  // Sign out
   async signOut() {
+    const supabase = ensureSupabaseClient()
     await supabase.auth.signOut()
   },
 
-  // Handle token expiry/refresh
   async handleTokenExpiry(userStore, originalRequest) {
     try {
+      const supabase = ensureSupabaseClient()
       const { data: { session }, error } = await supabase.auth.refreshSession()
 
       if (error || !session) {
@@ -39,18 +52,13 @@ const supabaseAuthProvider = {
 
       return originalRequest
     } catch (error) {
-      console.error('Supabase auth refresh error:', error)
+      console.error('Supabase token refresh error:', error)
       return null
     }
   },
 
-  // Supabase no longer handles anonymous sessions - use local provider instead
-  // async startAnonymousSession() {
-  //   throw new Error('Supabase provider does not support anonymous sessions. Use local provider.')
-  // },
-
-  // Convert anonymous to permanent
   async convertAnonymousAccount(email, password, metadata) {
+    const supabase = ensureSupabaseClient()
     const { data, error } = await supabase.auth.updateUser({
       email,
       password,
@@ -61,18 +69,17 @@ const supabaseAuthProvider = {
     return data
   },
 
-  // Listen for auth state changes
   onAuthStateChange(callback) {
+    const supabase = ensureSupabaseClient()
     return supabase.auth.onAuthStateChange(callback)
   },
 
-  // Direct access to auth client for widget
   get authClient() {
-    return supabase.auth
+    return ensureSupabaseClient().auth
   },
 
-  // Additional methods for widget compatibility
   async signIn(email, password) {
+    const supabase = ensureSupabaseClient()
     const result = await supabase.auth.signInWithPassword({ email, password })
     if (result.data?.session) {
       result.data.session._provider = 'supabase'
@@ -81,6 +88,7 @@ const supabaseAuthProvider = {
   },
 
   async signUp(email, password, metadata = {}) {
+    const supabase = ensureSupabaseClient()
     const result = await supabase.auth.signUp({
       email,
       password,
@@ -93,6 +101,7 @@ const supabaseAuthProvider = {
   },
 
   async signInWithProvider(provider, redirectTo) {
+    const supabase = ensureSupabaseClient()
     const result = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo }
@@ -124,21 +133,23 @@ const supabaseAuthProvider = {
   },
 
   getMetadata() {
+    const settings = getSupabaseSettings()
+    const configured = isSupabaseEnabled()
+
     return {
       name: 'supabase',
       displayName: 'SupaBase',
       icon: 'mdi-email-outline',
       widget: () => import('./SupabaseAuthWidget.vue'),
-      requiresDialog: true,  // Needs email/password form in dialog
-      configured: !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-      supportsLinking: true
+      requiresDialog: true,
+      configured,
+      supportsLinking: true,
+      oauthProviders: settings.oauthProviders || []
     }
   }
 }
 
-// Self-register when module loads
 registerAuthProvider('supabase', supabaseAuthProvider)
 
-// Export for direct use by widgets
 export default supabaseAuthProvider
 export const authProvider = supabaseAuthProvider

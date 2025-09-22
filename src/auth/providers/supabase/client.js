@@ -1,17 +1,36 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+let cachedClient = null
+let cachedSignature = null
+let currentCredentials = null
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables')
-  throw new Error('Supabase configuration missing. Please check your .env file.')
+export function configureSupabase(credentials) {
+  currentCredentials = credentials || null
+  resetSupabaseClient()
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+export function getSupabaseClient() {
+  if (!currentCredentials?.url || !currentCredentials?.anonKey) {
+    throw new Error('Supabase client not configured. Call configureAuthClient() with supabase credentials before using the Supabase provider.')
   }
-})
+
+  const signature = `${currentCredentials.url}::${currentCredentials.anonKey}`
+
+  if (!cachedClient || cachedSignature !== signature) {
+    cachedClient = createClient(currentCredentials.url, currentCredentials.anonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
+    cachedSignature = signature
+  }
+
+  return cachedClient
+}
+
+export function resetSupabaseClient() {
+  cachedClient = null
+  cachedSignature = null
+}

@@ -2,6 +2,7 @@ import axios from 'axios'
 import { storeToRefs } from 'pinia'
 import { registerAuthProvider } from '../../authProviders.js'
 import { normalizeGoogleSession } from '../../normalizers/google.js'
+import { getAuthClientConfig } from '../../../runtimeConfig.js'
 
 const SESSION_META_KEY = 'google_session_meta'
 
@@ -48,13 +49,18 @@ function clearSessionMeta() {
   localStorage.removeItem(SESSION_META_KEY)
 }
 
+function isGoogleEnabled() {
+  const config = getAuthClientConfig()
+  const providers = config.providers || []
+  const google = config.google
+  return providers.includes('google') && !!google?.clientId
+}
+
 const googleAuthProvider = {
-  // Normalize session to standard format
   normalizeSession(rawSession) {
     return normalizeGoogleSession(rawSession)
   },
 
-  // Get stored session (access tokens now derived from refresh cookie)
   async getStoredSession() {
     let meta = loadSessionMeta()
 
@@ -147,7 +153,6 @@ const googleAuthProvider = {
     return true
   },
 
-  // Sign out
   async signOut() {
     clearSessionMeta()
 
@@ -167,7 +172,6 @@ const googleAuthProvider = {
       console.warn('[Google Provider] Failed to clear refresh cookie:', error)
     }
 
-    // Disable Google One-Tap auto-select
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect()
     }
@@ -175,7 +179,6 @@ const googleAuthProvider = {
     return true
   },
 
-  // Handle token expiry in interceptor
   async handleTokenExpiry(userStore, originalRequest) {
     try {
       const { normalizedSession } = storeToRefs(userStore)
@@ -207,7 +210,6 @@ const googleAuthProvider = {
 
       await userStore.setSession(updatedSession, 'google')
 
-      // Update request
       originalRequest.headers['Authorization'] = `Bearer ${data.access_token}`
       originalRequest.headers['X-Auth-Provider'] = 'google'
       return originalRequest
@@ -219,12 +221,10 @@ const googleAuthProvider = {
     }
   },
 
-  // Google doesn't support anonymous sessions
   async startAnonymousSession() {
     throw new Error('Google does not support anonymous sessions')
   },
 
-  // Google doesn't support anonymous conversion
   async convertAnonymousAccount() {
     throw new Error('Google does not support anonymous account conversion')
   },
@@ -234,16 +234,14 @@ const googleAuthProvider = {
       name: 'google',
       displayName: 'Google',
       icon: 'mdi-google',
-      widget: () => import('./GoogleAuthWidget.vue'),  // Dynamic import
-      requiresDialog: false,  // OAuth flow doesn't need a dialog
-      configured: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      widget: () => import('./GoogleAuthWidget.vue'),
+      requiresDialog: false,
+      configured: isGoogleEnabled(),
       supportsLinking: true
     }
   }
 }
 
-// Self-register when module loads
 registerAuthProvider('google', googleAuthProvider)
 
-// Only export the provider object
 export default googleAuthProvider
