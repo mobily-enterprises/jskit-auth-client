@@ -57,15 +57,22 @@ function normalizeList(value) {
     .filter(Boolean)
 }
 
-function normalizeProviders(value, defaults) {
-  if (Array.isArray(value)) {
-    const normalized = value
+function normalizeProviders(value, defaults, supabaseConfigured, googleConfigured) {
+  if (value !== undefined) {
+    const source = Array.isArray(value) ? value : normalizeList(value)
+    const normalized = (Array.isArray(source) ? source : normalizeList(source))
       .map((item) => normalizeString(item))
       .filter(Boolean)
     return normalized.length ? Array.from(new Set(normalized)) : [...defaults]
   }
-  const list = normalizeList(value)
-  return list.length ? Array.from(new Set(list)) : [...defaults]
+
+  const computed = new Set(defaults)
+  if (supabaseConfigured) computed.add('supabase')
+  if (googleConfigured) computed.add('google')
+  if (!computed.size) {
+    computed.add('local')
+  }
+  return Array.from(computed)
 }
 
 function normalizeProviderName(value, fallback, providers) {
@@ -73,13 +80,16 @@ function normalizeProviderName(value, fallback, providers) {
   if (candidate && providers.includes(candidate)) {
     return candidate
   }
-  if (fallback && providers.includes(fallback)) {
-    return fallback
+  const fallbackCandidate = normalizeString(fallback)
+  if (fallbackCandidate && providers.includes(fallbackCandidate)) {
+    return fallbackCandidate
   }
   return providers[0]
 }
 
 function normalizeSupabaseConfig(raw = {}) {
+  if (!raw) return null
+
   const url = normalizeString(raw.url)
   const anonKey = normalizeString(raw.anonKey)
 
@@ -98,6 +108,8 @@ function normalizeSupabaseConfig(raw = {}) {
 }
 
 function normalizeGoogleConfig(raw = {}) {
+  if (!raw) return null
+
   const clientId = normalizeString(raw.clientId)
   if (!clientId) {
     return null
@@ -108,21 +120,33 @@ function normalizeGoogleConfig(raw = {}) {
 function normalizeAuthClientConfig(partial = {}) {
   const normalized = clone(DEFAULT_AUTH_CLIENT_CONFIG)
 
-  normalized.providers = normalizeProviders(partial.providers, DEFAULT_AUTH_CLIENT_CONFIG.providers)
+  const normalizedSupabase = normalizeSupabaseConfig(partial.supabase)
+  const normalizedGoogle = normalizeGoogleConfig(partial.google)
+
+  normalized.supabase = normalizedSupabase
+  normalized.google = normalizedGoogle
+
+  normalized.providers = normalizeProviders(
+    partial.providers,
+    DEFAULT_AUTH_CLIENT_CONFIG.providers,
+    !!normalizedSupabase,
+    !!normalizedGoogle
+  )
+
   normalized.defaultProvider = normalizeProviderName(
     partial.defaultProvider,
     DEFAULT_AUTH_CLIENT_CONFIG.defaultProvider,
     normalized.providers
   )
+
   normalized.anonymousProvider = normalizeProviderName(
     partial.anonymousProvider,
     DEFAULT_AUTH_CLIENT_CONFIG.anonymousProvider,
     normalized.providers
   )
+
   normalized.allowAnonymous = normalizeBoolean(partial.allowAnonymous, DEFAULT_AUTH_CLIENT_CONFIG.allowAnonymous)
   normalized.autoStartAnonymous = normalizeBoolean(partial.autoStartAnonymous, DEFAULT_AUTH_CLIENT_CONFIG.autoStartAnonymous)
-  normalized.supabase = normalizeSupabaseConfig(partial.supabase)
-  normalized.google = normalizeGoogleConfig(partial.google)
 
   const skippedKeys = new Set([
     'providers',
