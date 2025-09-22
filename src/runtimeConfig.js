@@ -11,10 +11,10 @@ const DEFAULT_AUTH_CLIENT_CONFIG = Object.freeze({
   google: null,
 })
 
-let currentConfig = cloneConfig(DEFAULT_AUTH_CLIENT_CONFIG)
+let currentConfig = clone(DEFAULT_AUTH_CLIENT_CONFIG)
 
-function cloneConfig(value) {
-  return JSON.parse(JSON.stringify(value))
+function clone(value) {
+  return value ? JSON.parse(JSON.stringify(value)) : value
 }
 
 function freezeDeep(value) {
@@ -25,29 +25,127 @@ function freezeDeep(value) {
   return value
 }
 
-function mergeConfig(target, source) {
-  if (!source || typeof source !== 'object') {
-    return target
+const TRUE_VALUES = new Set(['true', '1', 'yes', 'y', 'on'])
+const FALSE_VALUES = new Set(['false', '0', 'no', 'n', 'off'])
+
+function normalizeBoolean(value, defaultValue = false) {
+  if (value === undefined || value === null) return defaultValue
+  if (typeof value === 'boolean') return value
+  const str = String(value).trim().toLowerCase()
+  if (TRUE_VALUES.has(str)) return true
+  if (FALSE_VALUES.has(str)) return false
+  return defaultValue
+}
+
+function normalizeString(value) {
+  if (value === undefined || value === null) return undefined
+  const str = String(value).trim()
+  return str.length ? str : undefined
+}
+
+function normalizeList(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeString(item))
+      .filter(Boolean)
+  }
+  const str = normalizeString(value)
+  if (!str) return []
+  return str
+    .split(',')
+    .map((item) => normalizeString(item))
+    .filter(Boolean)
+}
+
+function normalizeProviders(value, defaults) {
+  if (Array.isArray(value)) {
+    const normalized = value
+      .map((item) => normalizeString(item))
+      .filter(Boolean)
+    return normalized.length ? Array.from(new Set(normalized)) : [...defaults]
+  }
+  const list = normalizeList(value)
+  return list.length ? Array.from(new Set(list)) : [...defaults]
+}
+
+function normalizeProviderName(value, fallback, providers) {
+  const candidate = normalizeString(value)
+  if (candidate && providers.includes(candidate)) {
+    return candidate
+  }
+  if (fallback && providers.includes(fallback)) {
+    return fallback
+  }
+  return providers[0]
+}
+
+function normalizeSupabaseConfig(raw = {}) {
+  const url = normalizeString(raw.url)
+  const anonKey = normalizeString(raw.anonKey)
+
+  if (!url || !anonKey) {
+    return null
   }
 
-  const result = Array.isArray(target) ? [...target] : { ...target }
+  return {
+    url,
+    anonKey,
+    oauthProviders: normalizeList(raw.oauthProviders),
+    oauthOnly: normalizeBoolean(raw.oauthOnly, false),
+    magicLink: normalizeBoolean(raw.magicLink, true),
+    redirectUrl: normalizeString(raw.redirectUrl)
+  }
+}
 
-  for (const [key, value] of Object.entries(source)) {
-    if (value === undefined) continue
+function normalizeGoogleConfig(raw = {}) {
+  const clientId = normalizeString(raw.clientId)
+  if (!clientId) {
+    return null
+  }
+  return { clientId }
+}
 
+function normalizeAuthClientConfig(partial = {}) {
+  const normalized = clone(DEFAULT_AUTH_CLIENT_CONFIG)
+
+  normalized.providers = normalizeProviders(partial.providers, DEFAULT_AUTH_CLIENT_CONFIG.providers)
+  normalized.defaultProvider = normalizeProviderName(
+    partial.defaultProvider,
+    DEFAULT_AUTH_CLIENT_CONFIG.defaultProvider,
+    normalized.providers
+  )
+  normalized.anonymousProvider = normalizeProviderName(
+    partial.anonymousProvider,
+    DEFAULT_AUTH_CLIENT_CONFIG.anonymousProvider,
+    normalized.providers
+  )
+  normalized.allowAnonymous = normalizeBoolean(partial.allowAnonymous, DEFAULT_AUTH_CLIENT_CONFIG.allowAnonymous)
+  normalized.autoStartAnonymous = normalizeBoolean(partial.autoStartAnonymous, DEFAULT_AUTH_CLIENT_CONFIG.autoStartAnonymous)
+  normalized.supabase = normalizeSupabaseConfig(partial.supabase)
+  normalized.google = normalizeGoogleConfig(partial.google)
+
+  const skippedKeys = new Set([
+    'providers',
+    'defaultProvider',
+    'anonymousProvider',
+    'allowAnonymous',
+    'autoStartAnonymous',
+    'supabase',
+    'google'
+  ])
+
+  for (const [key, value] of Object.entries(partial)) {
+    if (skippedKeys.has(key) || value === undefined) continue
     if (Array.isArray(value)) {
-      result[key] = [...value]
+      normalized[key] = value.map((item) => clone(item))
     } else if (value && typeof value === 'object') {
-      const base = Object.prototype.hasOwnProperty.call(result, key)
-        ? result[key]
-        : {}
-      result[key] = mergeConfig(base && typeof base === 'object' ? base : {}, value)
+      normalized[key] = clone(value)
     } else {
-      result[key] = value
+      normalized[key] = value
     }
   }
 
-  return result
+  return normalized
 }
 
 function validateConfig(config) {
@@ -81,21 +179,13 @@ function validateConfig(config) {
 }
 
 export function configureAuthClient(partialConfig = {}) {
-  const merged = mergeConfig(cloneConfig(DEFAULT_AUTH_CLIENT_CONFIG), partialConfig)
-  validateConfig(merged)
+  const normalized = normalizeAuthClientConfig(partialConfig)
+  validateConfig(normalized)
 
-  currentConfig = freezeDeep(merged)
+  currentConfig = freezeDeep(normalized)
 
   resetAuthConfig()
-  applyAuthConfig({
-    providers: currentConfig.providers,
-    defaultProvider: currentConfig.defaultProvider,
-    anonymousProvider: currentConfig.anonymousProvider,
-    allowAnonymous: currentConfig.allowAnonymous,
-    autoStartAnonymous: currentConfig.autoStartAnonymous,
-    supabase: currentConfig.supabase,
-    google: currentConfig.google,
-  })
+  applyAuthConfig(currentConfig)
 
   configureSupabase(currentConfig.supabase || null)
 
@@ -107,16 +197,8 @@ export function getAuthClientConfig() {
 }
 
 export function resetAuthClientConfig() {
-  currentConfig = freezeDeep(cloneConfig(DEFAULT_AUTH_CLIENT_CONFIG))
+  currentConfig = freezeDeep(clone(DEFAULT_AUTH_CLIENT_CONFIG))
   resetAuthConfig()
-  applyAuthConfig({
-    providers: currentConfig.providers,
-    defaultProvider: currentConfig.defaultProvider,
-    anonymousProvider: currentConfig.anonymousProvider,
-    allowAnonymous: currentConfig.allowAnonymous,
-    autoStartAnonymous: currentConfig.autoStartAnonymous,
-    supabase: currentConfig.supabase,
-    google: currentConfig.google,
-  })
+  applyAuthConfig(currentConfig)
   configureSupabase(currentConfig.supabase || null)
 }
