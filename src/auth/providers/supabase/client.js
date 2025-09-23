@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { getAuthClientConfig } from '../../../runtimeConfig.js'
+import { resolveSupabaseStorage } from './storage.js'
 
 let cachedClient = null
 let cachedSignature = null
@@ -16,12 +18,17 @@ export function getSupabaseClient() {
 
   const signature = `${currentCredentials.url}::${currentCredentials.anonKey}`
 
+  const authClientConfig = getAuthClientConfig()
+  const storagePreference = authClientConfig.security?.tokenStorage || 'memory'
+  const storageAdapter = resolveSupabaseStorage(storagePreference)
+
   if (!cachedClient || cachedSignature !== signature) {
     cachedClient = createClient(currentCredentials.url, currentCredentials.anonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        storage: storageAdapter
       }
     })
     cachedSignature = signature
