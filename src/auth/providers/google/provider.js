@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { storeToRefs } from 'pinia'
-import { registerAuthProvider } from '../../authProviders.js'
+import { registerAuthProvider, isProviderConfigured } from '../../authProviders.js'
 import { normalizeGoogleSession } from '../../normalizers/google.js'
 import { getAuthClientConfig } from '../../../runtimeConfig.js'
 
@@ -50,10 +50,7 @@ function clearSessionMeta() {
 }
 
 function isGoogleEnabled() {
-  const config = getAuthClientConfig()
-  const providers = config.providers || []
-  const google = config.google
-  return providers.includes('google') && !!google?.clientId
+  return isProviderConfigured('google')
 }
 
 const googleAuthProvider = {

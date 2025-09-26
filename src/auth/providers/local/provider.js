@@ -1,4 +1,4 @@
-import { registerAuthProvider } from '../../authProviders.js'
+import { registerAuthProvider, isProviderConfigured } from '../../authProviders.js'
 import { v4 as uuidv4 } from 'uuid'
 
 // Local anonymous session provider - no backend required
@@ -120,7 +120,7 @@ const localAuthProvider = {
       icon: 'mdi-incognito',
       widget: null, // No widget - this is for anonymous sessions only, not user sign-in
       requiresDialog: false,
-      configured: true, // Always configured
+      configured: isProviderConfigured('local'),
       supportsAnonymous: true,
       isAnonymousOnly: true // This provider is only for anonymous sessions
     }

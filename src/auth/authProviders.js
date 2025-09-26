@@ -18,9 +18,13 @@
  * - convertAnonymousAccount(email, password, metadata): Convert anonymous to permanent (optional)
  */
 const authProviders = {}
+const providerConfigurationStatus = Object.create(null)
 
 export function registerAuthProvider(name, provider) {
   authProviders[name] = provider
+  if (!(name in providerConfigurationStatus)) {
+    providerConfigurationStatus[name] = false
+  }
 }
 
 export function getAuthProvider(name) {
@@ -44,6 +48,14 @@ export async function callAuthProviderMethod(providerName, methodName, ...args) 
   return null
 }
 
+export function setProviderConfigured(name, configured) {
+  providerConfigurationStatus[name] = !!configured
+}
+
+export function isProviderConfigured(name) {
+  return !!providerConfigurationStatus[name]
+}
+
 /**
  * Get metadata for all configured providers
  * Used by UI components to dynamically render provider options
@@ -55,8 +67,11 @@ export function getAllProviderMetadata() {
     const provider = getAuthProvider(name)
     if (provider?.getMetadata) {
       const meta = provider.getMetadata()
-      // Only include configured providers
-      if (meta.configured) {
+      const configured = isProviderConfigured(name)
+      if (meta) {
+        meta.configured = configured
+      }
+      if (configured && meta) {
         metadata.push(meta)
       }
     }

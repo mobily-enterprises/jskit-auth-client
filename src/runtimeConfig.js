@@ -1,5 +1,6 @@
 import { applyAuthConfig, resetAuthConfig } from './config/auth.js'
 import { configureSupabase } from './auth/providers/supabase/client.js'
+import { setProviderConfigured } from './auth/authProviders.js'
 
 const DEFAULT_AUTH_CLIENT_CONFIG = Object.freeze({
   providers: ['local'],
@@ -215,6 +216,20 @@ export function configureAuthClient(partialConfig = {}) {
 
   configureSupabase(currentConfig.supabase || null)
 
+  const providers = Array.isArray(currentConfig.providers) ? currentConfig.providers : []
+  const supabaseConfigured =
+    providers.includes('supabase') &&
+    !!currentConfig.supabase?.url &&
+    !!currentConfig.supabase?.anonKey
+  const googleConfigured =
+    providers.includes('google') &&
+    !!currentConfig.google?.clientId
+  const localConfigured = providers.includes('local')
+
+  setProviderConfigured('local', localConfigured)
+  setProviderConfigured('supabase', supabaseConfigured)
+  setProviderConfigured('google', googleConfigured)
+
   return currentConfig
 }
 
@@ -227,4 +242,9 @@ export function resetAuthClientConfig() {
   resetAuthConfig()
   applyAuthConfig(currentConfig)
   configureSupabase(currentConfig.supabase || null)
+
+  const providers = Array.isArray(currentConfig.providers) ? currentConfig.providers : []
+  setProviderConfigured('local', providers.includes('local'))
+  setProviderConfigured('supabase', false)
+  setProviderConfigured('google', false)
 }
