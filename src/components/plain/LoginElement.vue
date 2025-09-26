@@ -50,9 +50,9 @@
 
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
-import { authConfig } from 'jskit-auth-client/config/auth.js'
-import { useUserStateStore } from 'jskit-auth-client/stores/userState.js'
-import { getAllProviderMetadata } from 'jskit-auth-client/auth/authProviders.js'
+import { authConfig } from '../../config/auth.js'
+import { useUserStateStore } from '../../stores/userState.js'
+import { getAllProviderMetadata } from '../../auth/authProviders.js'
 import ErrorBoundary from './ErrorBoundary.vue'
 
 const userStore = useUserStateStore()

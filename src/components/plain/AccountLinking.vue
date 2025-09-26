@@ -109,9 +109,9 @@
 <script setup>
 import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import axios from 'axios'
-import { useUserStateStore } from 'jskit-auth-client/stores/userState.js'
-import { getAllProviderMetadata } from 'jskit-auth-client/auth/authProviders.js'
-import { createLinkingSessionSnapshot, restoreLinkingSessionSnapshot } from 'jskit-auth-client/linking/sessionSnapshot.js'
+import { useUserStateStore } from '../../stores/userState.js'
+import { getAllProviderMetadata } from '../../auth/authProviders.js'
+import { createLinkingSessionSnapshot, restoreLinkingSessionSnapshot } from '../../linking/sessionSnapshot.js'
 import ErrorBoundary from './ErrorBoundary.vue'
 
 const userStore = useUserStateStore()
