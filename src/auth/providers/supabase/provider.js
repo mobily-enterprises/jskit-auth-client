@@ -1,8 +1,15 @@
 import axios from 'axios'
 import { getSupabaseClient } from './client.js'
-import { registerAuthProvider, isProviderConfigured } from '../../authProviders.js'
+import { registerAuthProvider } from '../../authProviders.js'
 import { normalizeSupabaseSession } from '../../normalizers/supabase.js'
 import { getAuthClientConfig } from '../../../runtimeConfig.js'
+
+function isSupabaseEnabled() {
+  const config = getAuthClientConfig() || {}
+  const providers = Array.isArray(config.providers) ? config.providers : []
+  const supabase = config.supabase || {}
+  return providers.includes('supabase') && !!supabase.url && !!supabase.anonKey
+}
 
 function ensureSupabaseClient() {
   return getSupabaseClient()
@@ -127,7 +134,7 @@ const supabaseAuthProvider = {
 
   getMetadata() {
     const settings = getSupabaseSettings()
-    const configured = isProviderConfigured('supabase')
+    const configured = isSupabaseEnabled()
 
     return {
       name: 'supabase',

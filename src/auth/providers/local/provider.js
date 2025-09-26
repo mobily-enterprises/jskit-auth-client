@@ -1,5 +1,13 @@
-import { registerAuthProvider, isProviderConfigured } from '../../authProviders.js'
+import { registerAuthProvider } from '../../authProviders.js'
 import { v4 as uuidv4 } from 'uuid'
+import { getAuthClientConfig } from '../../../runtimeConfig.js'
+
+
+function isLocalEnabled() {
+  const config = getAuthClientConfig() || {}
+  const providers = Array.isArray(config.providers) ? config.providers : []
+  return providers.includes('local')
+}
 
 // Local anonymous session provider - no backend required
 const localAuthProvider = {
@@ -120,7 +128,7 @@ const localAuthProvider = {
       icon: 'mdi-incognito',
       widget: null, // No widget - this is for anonymous sessions only, not user sign-in
       requiresDialog: false,
-      configured: isProviderConfigured('local'),
+      configured: isLocalEnabled(),
       supportsAnonymous: true,
       isAnonymousOnly: true // This provider is only for anonymous sessions
     }

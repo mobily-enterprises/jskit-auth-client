@@ -1,8 +1,7 @@
 import { applyAuthConfig, resetAuthConfig } from './config/auth.js'
 import { configureSupabase } from './auth/providers/supabase/client.js'
-import { setProviderConfigured } from './auth/authProviders.js'
 
-const DEFAULT_AUTH_CLIENT_CONFIG = Object.freeze({
+const DEFAULT_AUTH_CLIENT_CONFIG = {
   providers: ['local'],
   defaultProvider: 'local',
   anonymousProvider: 'local',
@@ -10,20 +9,12 @@ const DEFAULT_AUTH_CLIENT_CONFIG = Object.freeze({
   autoStartAnonymous: false,
   supabase: null,
   google: null,
-})
+}
 
-let currentConfig = clone(DEFAULT_AUTH_CLIENT_CONFIG)
+const SINGLETON_KEY = '__JSKIT_AUTH_CLIENT_SINGLETON__'
 
 function clone(value) {
   return value ? JSON.parse(JSON.stringify(value)) : value
-}
-
-function freezeDeep(value) {
-  if (value && typeof value === 'object') {
-    Object.freeze(value)
-    Object.values(value).forEach(freezeDeep)
-  }
-  return value
 }
 
 const TRUE_VALUES = new Set(['true', '1', 'yes', 'y', 'on'])
@@ -205,46 +196,75 @@ function validateConfig(config) {
   }
 }
 
+function createSingleton() {
+  const state = {
+    currentConfig: clone(DEFAULT_AUTH_CLIENT_CONFIG)
+  }
+
+  function setCurrentConfig(value) {
+    state.currentConfig = value
+  }
+
+  function configure(partialConfig = {}) {
+    const normalized = normalizeAuthClientConfig(partialConfig)
+    validateConfig(normalized)
+
+    setCurrentConfig(clone(normalized))
+
+    resetAuthConfig()
+    applyAuthConfig(state.currentConfig)
+
+    configureSupabase(state.currentConfig.supabase || null)
+
+    return state.currentConfig
+  }
+
+  function getConfig() {
+    return state.currentConfig
+  }
+
+  function resetConfig() {
+    setCurrentConfig(clone(DEFAULT_AUTH_CLIENT_CONFIG))
+    resetAuthConfig()
+    applyAuthConfig(state.currentConfig)
+    configureSupabase(state.currentConfig.supabase || null)
+    return state.currentConfig
+  }
+
+  return {
+    state,
+    configure,
+    getConfig,
+    resetConfig,
+    setCurrentConfig
+  }
+}
+
+const singleton = (() => {
+  const existing = globalThis[SINGLETON_KEY]
+  if (existing?.state?.currentConfig) {
+    return existing
+  }
+
+  const created = createSingleton()
+  const shared = {
+    state: created.state,
+    configure: created.configure,
+    getConfig: created.getConfig,
+    reset: created.resetConfig
+  }
+  globalThis[SINGLETON_KEY] = shared
+  return shared
+})()
+
 export function configureAuthClient(partialConfig = {}) {
-  const normalized = normalizeAuthClientConfig(partialConfig)
-  validateConfig(normalized)
-
-  currentConfig = freezeDeep(normalized)
-
-  resetAuthConfig()
-  applyAuthConfig(currentConfig)
-
-  configureSupabase(currentConfig.supabase || null)
-
-  const providers = Array.isArray(currentConfig.providers) ? currentConfig.providers : []
-  const supabaseConfigured =
-    providers.includes('supabase') &&
-    !!currentConfig.supabase?.url &&
-    !!currentConfig.supabase?.anonKey
-  const googleConfigured =
-    providers.includes('google') &&
-    !!currentConfig.google?.clientId
-  const localConfigured = providers.includes('local')
-
-  setProviderConfigured('local', localConfigured)
-  setProviderConfigured('supabase', supabaseConfigured)
-  setProviderConfigured('google', googleConfigured)
-
-  return currentConfig
+  return singleton.configure(partialConfig)
 }
 
 export function getAuthClientConfig() {
-  return currentConfig
+  return singleton.getConfig()
 }
 
 export function resetAuthClientConfig() {
-  currentConfig = freezeDeep(clone(DEFAULT_AUTH_CLIENT_CONFIG))
-  resetAuthConfig()
-  applyAuthConfig(currentConfig)
-  configureSupabase(currentConfig.supabase || null)
-
-  const providers = Array.isArray(currentConfig.providers) ? currentConfig.providers : []
-  setProviderConfigured('local', providers.includes('local'))
-  setProviderConfigured('supabase', false)
-  setProviderConfigured('google', false)
+  return singleton.reset()
 }
