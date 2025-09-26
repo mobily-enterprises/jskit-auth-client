@@ -1,35 +1,119 @@
-export { configureAuthClient, getAuthClientConfig, resetAuthClientConfig } from './src/runtimeConfig.js'
-export { authConfig, authConfig as defaultAuthConfig, getTimeout, getErrorMessage, checkRateLimit, circuitBreakers } from './src/config/auth.js'
-export { useUserStateStore } from './src/stores/userState.js'
-export { setupAuthInterceptor, setAuthRouter } from './src/auth/interceptor.js'
-export { registerAuthProvider, getAuthProvider, hasAuthProvider, getAllProviderNames, callAuthProviderMethod, getAllProviderMetadata } from './src/auth/authProviders.js'
-export { default as googleAuthProvider } from './src/auth/providers/google/provider.js'
-export { default as supabaseAuthProvider } from './src/auth/providers/supabase/provider.js'
-export { default as localAuthProvider } from './src/auth/providers/local/provider.js'
+import {
+  configureAuthClient as configure,
+  getAuthClientConfig as getConfig,
+  resetAuthClientConfig as resetConfig
+} from './src/runtimeConfig.js'
+import {
+  authConfig,
+  authConfig as defaultAuthConfig,
+  getTimeout,
+  getErrorMessage,
+  checkRateLimit,
+  circuitBreakers
+} from './src/config/auth.js'
+import { useUserStateStore } from './src/stores/userState.js'
+import { setupAuthInterceptor, setAuthRouter } from './src/auth/interceptor.js'
+import {
+  registerAuthProvider,
+  getAuthProvider,
+  hasAuthProvider,
+  getAllProviderNames,
+  callAuthProviderMethod,
+  getAllProviderMetadata
+} from './src/auth/authProviders.js'
+import googleAuthProvider from './src/auth/providers/google/provider.js'
+import supabaseAuthProvider from './src/auth/providers/supabase/provider.js'
+import localAuthProvider from './src/auth/providers/local/provider.js'
+import {
+  createLinkingSessionSnapshot,
+  restoreLinkingSessionSnapshot
+} from './src/linking/sessionSnapshot.js'
 
-export { createLinkingSessionSnapshot, restoreLinkingSessionSnapshot } from './src/linking/sessionSnapshot.js'
+import PlainLoginElement from './src/components/plain/LoginElement.vue'
+import PlainAccountLinking from './src/components/plain/AccountLinking.vue'
+import PlainAuthErrorBoundary from './src/components/plain/AuthErrorBoundary.vue'
+import PlainDrawerUserSection from './src/components/plain/DrawerUserSection.vue'
+import PlainUserMenu from './src/components/plain/UserMenu.vue'
+import PlainSignInPrompt from './src/components/plain/SignInPrompt.vue'
+import PlainErrorBoundary from './src/components/plain/ErrorBoundary.vue'
 
-export { default as PlainLoginElement } from './src/components/plain/LoginElement.vue'
-export { default as PlainAccountLinking } from './src/components/plain/AccountLinking.vue'
-export { default as PlainAuthErrorBoundary } from './src/components/plain/AuthErrorBoundary.vue'
-export { default as PlainDrawerUserSection } from './src/components/plain/DrawerUserSection.vue'
-export { default as PlainUserMenu } from './src/components/plain/UserMenu.vue'
-export { default as PlainSignInPrompt } from './src/components/plain/SignInPrompt.vue'
-export { default as PlainErrorBoundary } from './src/components/plain/ErrorBoundary.vue'
+import VuetifyLoginElement from './src/components/vue/LoginElement.vue'
+import VuetifyAccountLinking from './src/components/vue/AccountLinking.vue'
+import VuetifyAuthErrorBoundary from './src/components/vue/AuthErrorBoundary.vue'
+import VuetifyDrawerUserSection from './src/components/vue/DrawerUserSection.vue'
+import VuetifyUserMenu from './src/components/vue/UserMenu.vue'
+import VuetifySignInPrompt from './src/components/vue/SignInPrompt.vue'
+import VuetifyErrorBoundary from './src/components/vue/ErrorBoundary.vue'
 
-export { default as VuetifyLoginElement } from './src/components/vue/LoginElement.vue'
-export { default as VuetifyAccountLinking } from './src/components/vue/AccountLinking.vue'
-export { default as VuetifyAuthErrorBoundary } from './src/components/vue/AuthErrorBoundary.vue'
-export { default as VuetifyDrawerUserSection } from './src/components/vue/DrawerUserSection.vue'
-export { default as VuetifyUserMenu } from './src/components/vue/UserMenu.vue'
-export { default as VuetifySignInPrompt } from './src/components/vue/SignInPrompt.vue'
-export { default as VuetifyErrorBoundary } from './src/components/vue/ErrorBoundary.vue'
+const components = Object.freeze({
+  plain: Object.freeze({
+    LoginElement: PlainLoginElement,
+    AccountLinking: PlainAccountLinking,
+    AuthErrorBoundary: PlainAuthErrorBoundary,
+    DrawerUserSection: PlainDrawerUserSection,
+    UserMenu: PlainUserMenu,
+    SignInPrompt: PlainSignInPrompt,
+    ErrorBoundary: PlainErrorBoundary
+  }),
+  vuetify: Object.freeze({
+    LoginElement: VuetifyLoginElement,
+    AccountLinking: VuetifyAccountLinking,
+    AuthErrorBoundary: VuetifyAuthErrorBoundary,
+    DrawerUserSection: VuetifyDrawerUserSection,
+    UserMenu: VuetifyUserMenu,
+    SignInPrompt: VuetifySignInPrompt,
+    ErrorBoundary: VuetifyErrorBoundary
+  })
+})
 
-// Backwards-friendly aliases (default to plain)
-export { default as StockLoginElement } from './src/components/plain/LoginElement.vue'
-export { default as StockAccountLinking } from './src/components/plain/AccountLinking.vue'
-export { default as StockAuthErrorBoundary } from './src/components/plain/AuthErrorBoundary.vue'
-export { default as StockDrawerUserSection } from './src/components/plain/DrawerUserSection.vue'
-export { default as StockUserMenu } from './src/components/plain/UserMenu.vue'
-export { default as StockSignInPrompt } from './src/components/plain/SignInPrompt.vue'
-export { default as StockErrorBoundary } from './src/components/plain/ErrorBoundary.vue'
+const providers = Object.freeze({
+  register: registerAuthProvider,
+  get: getAuthProvider,
+  has: hasAuthProvider,
+  list: getAllProviderNames,
+  call: callAuthProviderMethod,
+  metadata: getAllProviderMetadata,
+  google: googleAuthProvider,
+  supabase: supabaseAuthProvider,
+  local: localAuthProvider
+})
+
+const linking = Object.freeze({
+  createSnapshot: createLinkingSessionSnapshot,
+  restoreSnapshot: restoreLinkingSessionSnapshot
+})
+
+const interceptor = Object.freeze({
+  setup: setupAuthInterceptor,
+  setRouter: setAuthRouter
+})
+
+const stores = Object.freeze({
+  useUserStateStore
+})
+
+const auth = Object.freeze({
+  configure,
+  getConfig,
+  resetConfig,
+  runtime: authConfig,
+  defaults: defaultAuthConfig,
+  getTimeout,
+  getErrorMessage,
+  checkRateLimit,
+  circuitBreakers
+})
+
+const AuthClient = Object.freeze({
+  configure,
+  getConfig,
+  resetConfig,
+  auth,
+  stores,
+  interceptor,
+  providers,
+  linking,
+  components
+})
+
+export default AuthClient
